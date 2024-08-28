@@ -2,6 +2,10 @@
 
 One Piece TCG data scraper written in Rust.
 
+## Where is the data?
+
+For practical reasons, data is kept in a separate repository: https://github.com/Coko7/op-tcg-data
+
 ## 🎴 Supported card fields
 
 - [x] id
