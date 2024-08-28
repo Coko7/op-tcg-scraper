@@ -38,6 +38,7 @@ pub struct Card {
     // pub notes: String,
 }
 ```
+Fields have been named following the terms used in the official [rule book](https://en.onepiece-cardgame.com/pdf/rule_comprehensive.pdf)
 
 ## 🗺️ Road Map
 
