@@ -1,13 +1,14 @@
 use anyhow::Result;
 use chrono::Utc;
 use log::info;
-use scraper::OpTcgScraper;
+
+use op_scraper::OpTcgScraper;
 
 mod card;
 mod card_scraper;
 mod card_set;
-mod data;
-mod scraper;
+mod op_data;
+mod op_scraper;
 
 fn main() -> Result<()> {
     env_logger::init();
@@ -74,13 +75,13 @@ fn scrap_cards_data() -> Result<(), anyhow::Error> {
     info!("Processed all {} card sets", card_sets.len());
     let end_time = Utc::now();
 
-    let data = data::OnePieceTcgData {
+    let data = op_data::OnePieceTcgData {
         base_url: host.to_string(),
         fetch_start_date: start_time,
         fetch_end_date: end_time,
         card_sets,
     };
 
-    data::write_data(&data)?;
+    op_data::write_data(&data)?;
     Ok(())
 }

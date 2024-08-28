@@ -1,5 +1,4 @@
-use core::fmt;
-use std::fmt::write;
+use std::fmt;
 
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
@@ -11,7 +10,7 @@ pub struct Card {
     pub rarity: CardRarity,
     pub category: CardCategory,
     // pub number: i32,
-    #[serde(skip_serializing)]
+    // #[serde(skip_serializing)]
     // pub set_id: String,
     // pub copyright: String,
 
@@ -19,14 +18,13 @@ pub struct Card {
     pub img_url: String,
     // pub illustration: CardIllustration,
     // pub illustrator_name: String,
+
     // Gameplay
     pub colors: Vec<CardColor>,
-    // pub life: Option<i32>,              // Only Leader
-    // Cost and Life refer to same thing in backend now
-    pub cost: Option<i32>,              // Only Character, Event and Stage
+    pub cost: Option<i32>, // Only Character, Event and Stage (called life for Leader)
     pub attributes: Vec<CardAttribute>, // Only Leader and Character
-    pub power: Option<i32>,             // Only Leader and Character
-    pub counter: Option<i32>,           // Only Character
+    pub power: Option<i32>, // Only Leader and Character
+    pub counter: Option<i32>, // Only Character
 
     pub types: Vec<String>,
     pub effect: String,

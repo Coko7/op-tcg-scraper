@@ -3,7 +3,7 @@ use log::{debug, info};
 use reqwest::blocking::Client;
 use std::collections::HashMap;
 
-use crate::{card::Card, card_scraper::CardScraper, card_set::CardSet, data};
+use crate::{card::Card, card_scraper::CardScraper, card_set::CardSet, op_data};
 
 pub struct OpTcgScraper {
     base_url: String,
@@ -93,7 +93,7 @@ impl OpTcgScraper {
 
     pub fn download_card_image(&self, card: &Card) -> Result<(), anyhow::Error> {
         let full_url = self.get_img_full_url(&card.img_url);
-        let img_file_path = data::compute_img_file_path(card)?;
+        let img_file_path = op_data::compute_img_file_path(card)?;
         let mut file = std::fs::File::create(img_file_path).unwrap();
 
         reqwest::blocking::get(full_url)?.copy_to(&mut file)?;
