@@ -8,42 +8,47 @@ For practical reasons, data is kept in a separate repository: https://github.com
 
 ## 🎴 Supported card fields
 
-- [x] id
-- [x] name
-- [x] rarity
-- [x] category
-- [x] set_id (not serialized)
+```rust
+#[derive(Debug, Deserialize, Serialize)]
+pub struct Card {
+    pub id: String,
+    pub name: String,
+    pub rarity: CardRarity,
+    pub category: CardCategory,
+    // pub number: i32,
+    // #[serde(skip_serializing)]
+    // pub set_id: String,
+    // pub copyright: String,
 
-Images:
-- [ ] thumb_url
-- [x] img_url
-- [ ] illustration
-- [ ] illustrator_name
+    // Images
+    pub img_url: String,
+    // pub illustration: CardIllustration,
+    // pub illustrator_name: String,
 
-Data values:
-- [x] colors
-- [ ] number
-- [x] life/cost
-- [x] attributes
-- [x] power
-- [x] counter
+    // Gameplay
+    pub colors: Vec<CardColor>,
+    pub cost: Option<i32>, // Only Character, Event and Stage (called life for Leader)
+    pub attributes: Vec<CardAttribute>, // Only Leader and Character
+    pub power: Option<i32>, // Only Leader and Character
+    pub counter: Option<i32>, // Only Character
 
-Text:
-- [ ] types
-- [ ] effect
-- [ ] trigger
-- [ ] notes
-- [ ] copyright
+    pub types: Vec<String>,
+    pub effect: String,
+    pub trigger: Option<String>,
+    // pub notes: String,
+}
+```
 
 ## 🗺️ Road Map
 
 - [x] Fetch card sets data
 - [x] Better error handling
 - [x] Fetch cards data for each card set (wip)
-- [ ] Get card data for all card sets
-- [ ] Organize and save cards data as JSON to files
-- [ ] Add logs
-- [ ] Support more card fields
-- [ ] Download card images as well
+- [x] Get card data for all card sets
+- [x] Organize and save cards data as JSON to files
+- [x] Add logs
+- [x] Support more card fields
+- [x] Download card images as well
 - [ ] Make it locale-agnostic to be able to download data from Japanese and other versions
 - [ ] User friendly CLI
+- [ ] Add tests
