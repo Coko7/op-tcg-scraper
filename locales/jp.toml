@@ -1,0 +1,34 @@
+hostname = "https://www.onepiece-cardgame.com"
+
+[colors]
+red = "赤"
+green = "緑"
+blue = "青"
+purple = "紫"
+black = "黒"
+yellow = "黄"
+
+[attributes]
+slash = "斬"
+strike = "打"
+ranged = "射"
+special = "特"
+wisdom = "知"
+
+[categories]
+leader = "LEADER"
+character = "CHARACTER"
+event = "EVENT"
+stage = "STAGE"
+don = "DON"
+
+[rarities]
+common = "C"
+uncommon = "UC"
+rare = "R"
+super_rare = "SR"
+secret_rare = "SEC"
+leader = "L"
+special = "SPカード"
+treasure_rare = "TR"
+promo = "P"
