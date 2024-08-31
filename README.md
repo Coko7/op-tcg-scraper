@@ -50,6 +50,8 @@ Fields have been named following the terms used in the official [rule book](http
 - [x] Add logs
 - [x] Support more card fields
 - [x] Download card images as well
-- [ ] Make it locale-agnostic to be able to download data from Japanese and other versions
+- [x] Make it locale-agnostic to be able to download data from Japanese and other versions
+    - [ ] Handle problems with the `jp` version (inconsistent cards data on official site)
+- [ ] Better configuration 
 - [ ] User friendly CLI
 - [ ] Add tests
