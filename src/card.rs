@@ -3,6 +3,8 @@ use std::fmt;
 use anyhow::anyhow;
 use serde::{Deserialize, Serialize};
 
+use crate::localizer::Localizer;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Card {
     pub id: String,
@@ -49,14 +51,21 @@ pub enum CardColor {
 }
 
 impl CardColor {
+    pub fn parse(localizer: &Localizer, value: &str) -> Result<CardColor, anyhow::Error> {
+        match localizer.match_color(value) {
+            Some(key) => Ok(Self::from_str(&key)?),
+            None => Err(anyhow!("Failed to match color `{}`", value)),
+        }
+    }
+
     pub fn from_str(value: &str) -> Result<CardColor, anyhow::Error> {
-        match value.to_uppercase().as_str() {
-            "RED" => Ok(Self::Red),
-            "GREEN" => Ok(Self::Green),
-            "BLUE" => Ok(Self::Blue),
-            "PURPLE" => Ok(Self::Purple),
-            "BLACK" => Ok(Self::Black),
-            "YELLOW" => Ok(Self::Yellow),
+        match value {
+            "red" => Ok(Self::Red),
+            "green" => Ok(Self::Green),
+            "blue" => Ok(Self::Blue),
+            "purple" => Ok(Self::Purple),
+            "black" => Ok(Self::Black),
+            "yellow" => Ok(Self::Yellow),
             _ => Err(anyhow!("Unsupported color `{}`", value)),
         }
     }
@@ -80,13 +89,20 @@ pub enum CardAttribute {
 }
 
 impl CardAttribute {
+    pub fn parse(localizer: &Localizer, value: &str) -> Result<CardAttribute, anyhow::Error> {
+        match localizer.match_attribute(value) {
+            Some(key) => Ok(Self::from_str(&key)?),
+            None => Err(anyhow!("Failed to match attribute `{}`", value)),
+        }
+    }
+
     pub fn from_str(value: &str) -> Result<CardAttribute, anyhow::Error> {
-        match value.to_uppercase().as_str() {
-            "SLASH" => Ok(Self::Slash),
-            "STRIKE" => Ok(Self::Strike),
-            "RANGED" => Ok(Self::Ranged),
-            "SPECIAL" => Ok(Self::Special),
-            "WISDOM" => Ok(Self::Wisdom),
+        match value {
+            "slash" => Ok(Self::Slash),
+            "strike" => Ok(Self::Strike),
+            "ranged" => Ok(Self::Ranged),
+            "special" => Ok(Self::Special),
+            "wisdom" => Ok(Self::Wisdom),
             _ => Err(anyhow!("Unsupported attribute `{}`", value)),
         }
     }
@@ -102,13 +118,20 @@ pub enum CardCategory {
 }
 
 impl CardCategory {
+    pub fn parse(localizer: &Localizer, value: &str) -> Result<CardCategory, anyhow::Error> {
+        match localizer.match_category(value) {
+            Some(key) => Ok(Self::from_str(&key)?),
+            None => Err(anyhow!("Failed to match category `{}`", value)),
+        }
+    }
+
     pub fn from_str(value: &str) -> Result<CardCategory, anyhow::Error> {
-        match value.to_uppercase().as_str() {
-            "LEADER" => Ok(Self::Leader),
-            "CHARACTER" => Ok(Self::Character),
-            "EVENT" => Ok(Self::Event),
-            "STAGE" => Ok(Self::Stage),
-            "DON" => Ok(Self::Don),
+        match value {
+            "leader" => Ok(Self::Leader),
+            "character" => Ok(Self::Character),
+            "event" => Ok(Self::Event),
+            "stage" => Ok(Self::Stage),
+            "don" => Ok(Self::Don),
             _ => Err(anyhow!("Unsupported category `{}`", value)),
         }
     }
@@ -128,17 +151,24 @@ pub enum CardRarity {
 }
 
 impl CardRarity {
+    pub fn parse(localizer: &Localizer, value: &str) -> Result<CardRarity, anyhow::Error> {
+        match localizer.match_rarity(value) {
+            Some(key) => Ok(Self::from_str(&key)?),
+            None => Err(anyhow!("Failed to match rarity `{}`", value)),
+        }
+    }
+
     pub fn from_str(value: &str) -> Result<CardRarity, anyhow::Error> {
-        match value.to_uppercase().as_str() {
-            "C" => Ok(Self::Common),
-            "UC" => Ok(Self::Uncommon),
-            "R" => Ok(Self::Rare),
-            "SR" => Ok(Self::SuperRare),
-            "SEC" => Ok(Self::SecretRare),
-            "L" => Ok(Self::Leader),
-            "SP CARD" => Ok(Self::Special),
-            "TR" => Ok(Self::TreasureRare), // Supposedly added in OP07
-            "P" => Ok(Self::Promo),         // Promo cards (Ultra rare)
+        match value {
+            "common" => Ok(Self::Common),
+            "uncommon" => Ok(Self::Uncommon),
+            "rare" => Ok(Self::Rare),
+            "super_rare" => Ok(Self::SuperRare),
+            "secret_rare" => Ok(Self::SecretRare),
+            "leader" => Ok(Self::Leader),
+            "special" => Ok(Self::Special),
+            "treasure_rare" => Ok(Self::TreasureRare), // Supposedly added in OP07
+            "promo" => Ok(Self::Promo),                // Promo cards (Ultra rare)
             _ => Err(anyhow!("Unsupported rarity `{}`", value)),
         }
     }

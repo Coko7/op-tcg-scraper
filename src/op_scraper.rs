@@ -1,18 +1,29 @@
-use anyhow::Context;
+use anyhow::{anyhow, Context};
 use log::{debug, info};
 use reqwest::blocking::Client;
 use std::collections::HashMap;
 
-use crate::{card::Card, card_scraper::CardScraper, card_set::CardSet, op_data};
+use crate::{
+    card::Card, card_scraper::CardScraper, card_set::CardSet, localizer::Localizer, op_data,
+};
 
-pub struct OpTcgScraper {
+pub struct OpTcgScraper<'a> {
     base_url: String,
+    localizer: &'a Localizer,
 }
 
-impl OpTcgScraper {
-    pub fn new(base_url: &str) -> OpTcgScraper {
+impl<'a> OpTcgScraper<'a> {
+    // pub fn new2(base_url: &str) -> OpTcgScraper {
+    //     OpTcgScraper {
+    //         lo
+    //         base_url: base_url.to_string(),
+    //     }
+    // }
+
+    pub fn new(localizer: &Localizer) -> OpTcgScraper {
         OpTcgScraper {
-            base_url: base_url.to_string(),
+            base_url: localizer.hostname.clone(),
+            localizer,
         }
     }
 
@@ -83,8 +94,18 @@ impl OpTcgScraper {
 
             let card_id = &card_id[1..];
 
-            let card = CardScraper::create_card(&document, &card_id)?;
-            cards.push(card);
+            match CardScraper::create_card(&self.localizer, &document, &card_id) {
+                Ok(card) => {
+                    cards.push(card);
+                }
+                Err(error) => {
+                    return Err(anyhow!(
+                        "failed to scrap data about card `{}`: {}",
+                        &card_id,
+                        error
+                    ))
+                }
+            };
         }
 
         info!("processed cards for set `{}`", card_set_id);

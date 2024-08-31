@@ -1,25 +1,32 @@
 use anyhow::{anyhow, Context};
-use log::{debug, trace};
+use log::{debug, error, trace};
 use regex::Regex;
 use scraper::{ElementRef, Html};
 
-use crate::card::{Card, CardAttribute, CardCategory, CardColor, CardRarity};
+use crate::{
+    card::{Card, CardAttribute, CardCategory, CardColor, CardRarity},
+    localizer::Localizer,
+};
 
 pub struct CardScraper {}
 
 impl CardScraper {
-    pub fn create_card(document: &Html, card_id: &str) -> Result<Card, anyhow::Error> {
+    pub fn create_card(
+        localizer: &Localizer,
+        document: &Html,
+        card_id: &str,
+    ) -> Result<Card, anyhow::Error> {
         trace!("start create card: `{}`", card_id);
         let dl_elem = Self::get_dl_node(document, card_id.to_string())?;
 
         let id = Self::fetch_id(dl_elem)?;
         let name = Self::fetch_name(dl_elem)?;
-        let rarity = Self::fetch_rarity(dl_elem)?;
-        let category = Self::fetch_category(dl_elem)?;
+        let rarity = Self::fetch_rarity(&localizer, dl_elem)?;
+        let category = Self::fetch_category(&localizer, dl_elem)?;
         let img_url = Self::fetch_img_url(dl_elem)?;
-        let colors = Self::fetch_colors(dl_elem)?;
+        let colors = Self::fetch_colors(&localizer, dl_elem)?;
         let cost = Self::fetch_cost(dl_elem)?;
-        let attributes = Self::fetch_attributes(dl_elem)?;
+        let attributes = Self::fetch_attributes_2(&localizer, dl_elem)?;
         let power = Self::fetch_power(dl_elem)?;
         let counter = Self::fetch_counter(dl_elem)?;
         let types = Self::fetch_types(dl_elem)?;
@@ -68,27 +75,33 @@ impl CardScraper {
         Ok(name)
     }
 
-    pub fn fetch_rarity(element: ElementRef) -> Result<CardRarity, anyhow::Error> {
+    pub fn fetch_rarity(
+        localizer: &Localizer,
+        element: ElementRef,
+    ) -> Result<CardRarity, anyhow::Error> {
         let sel = "dt>div.infoCol>span:nth-child(2)";
         trace!("fetching card.rarity ({})...", sel);
 
         let raw_rarity = Self::get_child_node(element, sel.to_string())?.inner_html();
 
         trace!("fetched card.rarity: {}", raw_rarity);
-        let rarity = CardRarity::from_str(&raw_rarity)?;
+        let rarity = CardRarity::parse(&localizer, &raw_rarity)?;
 
         trace!("processed card.rarity");
         Ok(rarity)
     }
 
-    pub fn fetch_category(element: ElementRef) -> Result<CardCategory, anyhow::Error> {
+    pub fn fetch_category(
+        localizer: &Localizer,
+        element: ElementRef,
+    ) -> Result<CardCategory, anyhow::Error> {
         let sel = "dt>div.infoCol>span:nth-child(3)";
         trace!("fetching card.category ({})...", sel);
 
         let raw_category = Self::get_child_node(element, sel.to_string())?.inner_html();
 
         trace!("fetched card.category: {}", raw_category);
-        let category = CardCategory::from_str(&raw_category)?;
+        let category = CardCategory::parse(&localizer, &raw_category)?;
 
         trace!("processed card.category");
         Ok(category)
@@ -108,7 +121,10 @@ impl CardScraper {
         Ok(img_url)
     }
 
-    pub fn fetch_colors(element: ElementRef) -> Result<Vec<CardColor>, anyhow::Error> {
+    pub fn fetch_colors(
+        localizer: &Localizer,
+        element: ElementRef,
+    ) -> Result<Vec<CardColor>, anyhow::Error> {
         let sel = "dd>div.backCol>div.color";
         trace!("fetching card.colors ({})...", sel);
 
@@ -121,7 +137,7 @@ impl CardScraper {
         let mut colors = Vec::new();
         for (index, raw_color) in raw_colors.iter().enumerate() {
             trace!("processing card.colors[{}]: {}", index, raw_color);
-            let color = CardColor::from_str(&raw_color)?;
+            let color = CardColor::parse(localizer, &raw_color)?;
             colors.push(color);
         }
 
@@ -142,13 +158,56 @@ impl CardScraper {
             return Ok(None);
         }
 
-        let cost: i32 = raw_cost.parse()?;
-
-        trace!("processed card.cost");
-        Ok(Some(cost))
+        match raw_cost.parse::<i32>() {
+            Ok(val) => {
+                trace!("processed card.cost");
+                return Ok(Some(val));
+            }
+            Err(e) => Err(anyhow!(
+                "failed to parse card.cost value `{}`: {}",
+                raw_cost,
+                e
+            )),
+        }
     }
 
-    pub fn fetch_attributes(element: ElementRef) -> Result<Vec<CardAttribute>, anyhow::Error> {
+    pub fn fetch_attributes_2(
+        localizer: &Localizer,
+        element: ElementRef,
+    ) -> Result<Vec<CardAttribute>, anyhow::Error> {
+        let sel = "dd>div.backCol>div.col2>div.attribute>img";
+        trace!("fetching card.attributes ({})...", sel);
+
+        if let Ok(attr_img) = Self::get_child_node(element, sel.to_string()) {
+            let raw_attributes = attr_img.attr("alt").context("no alt attr")?.to_string();
+            trace!("fetched card.attributes: {}", raw_attributes);
+
+            if raw_attributes.is_empty() {
+                trace!("card.attributes empty");
+                return Ok(Vec::new());
+            }
+
+            let raw_attributes: Vec<&str> = raw_attributes.split('/').collect();
+
+            let mut attributes = Vec::new();
+            for (index, raw_attribute) in raw_attributes.iter().enumerate() {
+                trace!("processing card.attributes[{}]: {}", index, raw_attribute);
+                let attribute = CardAttribute::parse(&localizer, &raw_attribute)?;
+                attributes.push(attribute);
+            }
+
+            trace!("processed card.attributes");
+            return Ok(attributes);
+        }
+
+        trace!("card.attributes no img found");
+        Ok(Vec::new())
+    }
+
+    pub fn fetch_attributes(
+        localizer: &Localizer,
+        element: ElementRef,
+    ) -> Result<Vec<CardAttribute>, anyhow::Error> {
         let sel = "dd>div.backCol>div.col2>div.attribute>i";
         trace!("fetching card.attributes ({})...", sel);
 
@@ -165,7 +224,7 @@ impl CardScraper {
         let mut attributes = Vec::new();
         for (index, raw_attribute) in raw_attributes.iter().enumerate() {
             trace!("processing card.attributes[{}]: {}", index, raw_attribute);
-            let attribute = CardAttribute::from_str(&raw_attribute)?;
+            let attribute = CardAttribute::parse(&localizer, &raw_attribute)?;
             attributes.push(attribute);
         }
 
@@ -186,10 +245,17 @@ impl CardScraper {
             return Ok(None);
         }
 
-        let power: i32 = raw_power.parse()?;
-
-        trace!("processed card.power");
-        Ok(Some(power))
+        match raw_power.parse::<i32>() {
+            Ok(val) => {
+                trace!("processed card.power");
+                return Ok(Some(val));
+            }
+            Err(e) => Err(anyhow!(
+                "failed to parse card.power value `{}`: {}",
+                raw_power,
+                e
+            )),
+        }
     }
 
     pub fn fetch_counter(element: ElementRef) -> Result<Option<i32>, anyhow::Error> {
@@ -205,10 +271,17 @@ impl CardScraper {
             return Ok(None);
         }
 
-        let counter: i32 = raw_counter.parse()?;
-
-        trace!("processed card.counter");
-        Ok(Some(counter))
+        match raw_counter.parse::<i32>() {
+            Ok(val) => {
+                trace!("processed card.counter");
+                return Ok(Some(val));
+            }
+            Err(e) => Err(anyhow!(
+                "failed to parse card.counter value `{}`: {}",
+                raw_counter,
+                e
+            )),
+        }
     }
 
     pub fn fetch_types(element: ElementRef) -> Result<Vec<String>, anyhow::Error> {
