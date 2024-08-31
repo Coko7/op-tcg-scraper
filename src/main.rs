@@ -15,41 +15,62 @@ mod op_scraper;
 fn main() -> Result<()> {
     env_logger::init();
 
-    let localizer = Localizer::load_from_file("en")?;
+    let localizer = Localizer::load_from_file("jp")?;
 
     match scrap_all_cards(&localizer) {
         Ok(()) => (),
-        Err(e) => {
-            error!("failed to scrap cards data: {}", e);
+        Err(error) => {
+            error!("failed to scrap cards data: {}", error);
         }
     }
 
-    // download_all_images()?;
+    // match download_all_images(&localizer) {
+    //     Ok(()) => (),
+    //     Err(error) => {
+    //         error!("failed to download card images: {}", error);
+    //     }
+    // }
+
     Ok(())
 }
 
-// fn download_all_images() -> Result<(), anyhow::Error> {
-//     info!("start massive download of OP TCG card images");
-//
-//     let host = "https://en.onepiece-cardgame.com";
-//     let scraper = OpTcgScraper::new(host);
-//
-//     let card_sets = data::load_cards_data()?;
-//
-//     let mut count = 0;
-//     for card_set in card_sets.iter() {
-//         let cards = data::load_cards_for_set(&card_set.id)?;
-//
-//         for card in cards.iter() {
-//             count += 1;
-//             scraper.download_card_image(card)?;
-//             println!("{}", card.id);
-//         }
-//     }
-//
-//     println!("SUMMARY: {} sets ; {} total cards", card_sets.len(), count);
-//     Ok(())
-// }
+fn download_all_images(localizer: &Localizer) -> Result<(), anyhow::Error> {
+    info!("start massive download of OP TCG card images");
+
+    let scraper = OpTcgScraper::new(&localizer);
+    let data = op_data::load_data()?;
+
+    for (set_idx, card_set) in data.card_sets.iter().enumerate() {
+        info!(
+            "downloading data for set `{}` ({}/{}), {} cards...",
+            card_set.title,
+            set_idx,
+            data.card_sets.len(),
+            card_set.cards.len()
+        );
+
+        for (card_idx, card) in card_set.cards.iter().enumerate() {
+            scraper.download_card_image(card)?;
+            info!(
+                "({}) downloading card `{}` ({}/{})...",
+                card_set.title,
+                card.id,
+                card_idx,
+                card_set.cards.len()
+            );
+
+            println!("{}", card.id);
+        }
+    }
+
+    info!(
+        "downloaded images for: {} sets ; {} total cards",
+        data.card_sets.len(),
+        data.total_cards()
+    );
+
+    Ok(())
+}
 
 fn scrap_all_cards(localizer: &Localizer) -> Result<(), anyhow::Error> {
     info!("start OP TCG Scraper");
