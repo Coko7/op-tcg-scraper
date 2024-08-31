@@ -6,7 +6,7 @@ One Piece TCG data scraper written in Rust.
 
 For practical reasons, data is kept in a separate repository: https://github.com/Coko7/op-tcg-data
 
-## 🎴 Supported card fields
+## 🃏 Supported card fields
 
 ```rust
 #[derive(Debug, Deserialize, Serialize)]
@@ -39,6 +39,10 @@ pub struct Card {
 }
 ```
 Fields have been named following the terms used in the official [rule book](https://en.onepiece-cardgame.com/pdf/rule_comprehensive.pdf)
+
+## 🐛 Issues
+
+When using `jp` locale to fetch data, the scraper will likely fail when handling `counter` or `colors` values for some cards.
 
 ## 🗺️ Road Map
 
